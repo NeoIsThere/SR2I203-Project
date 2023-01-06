@@ -7,7 +7,7 @@ function Console({ onSendCallback, log }) {
 
   useEffect(() => {
     updateMessages(log);
-  }, [log]);
+  }, [log]); /*[log] is the variable we want to listen to for changes*/
 
   const onEditInput = (e) => {
     setCurrentInput((prevInput) => e.target.value);

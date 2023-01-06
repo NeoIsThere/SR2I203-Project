@@ -9,13 +9,11 @@ const socket = io("http://localhost:8080");
 function App() {
   const [newLog, setNewLog] = useState("");
 
-  useEffect(() => {
-    socket.on("connect", () => console.log("connected!"));
+  socket.on("connect", () => console.log("connected!"));
 
-    socket.on("log", (log) => {
-      setNewLog(log);
-    });
-  }, []);
+  socket.on("log", (log) => {
+    setNewLog(log); /*this changes the state which causes a rerender so the child get the new log*/
+  });
 
   function onSendCommand(command) {
     socket.emit("send-command", command);
