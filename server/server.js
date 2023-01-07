@@ -44,6 +44,8 @@ io.on("connection", function (socket) {
   socket.on("send-command", (command) => {
     executeCommand(command);
   });
+
+  socket.on("error", () => {});
 });
 
 httpServer.listen(8080, function () {
