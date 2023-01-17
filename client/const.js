@@ -8,7 +8,7 @@ export const ERROR_MSG = {
   INVALID_ADDRESS: "error: invalid address",
 };
 const MIN = 1000*60;
-export const ATTACK_TIMEOUT_MS =  10;
+export const ATTACK_TIMEOUT_MS =  10*MIN;
 
 export const DOS_HTTP_REQ_COUNT = 100;
 
